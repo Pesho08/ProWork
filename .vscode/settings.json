@@ -1,0 +1,13 @@
+{
+  "java.project.sourcePaths": [
+    "src/java"
+  ],
+  "java.project.outputPath": "bin",
+  "java.project.referencedLibraries": [
+    "lib/**/*.jar"
+  ],
+  "java.project.resourceFilters": [
+    "resources/**"
+  ],
+  "java.debug.settings.vmArgs": "--module-path \"${workspaceFolder}\\lib\\javafx-sdk-25.0.1\\lib\" --add-modules javafx.controls,javafx.fxml,javafx.web --enable-native-access=javafx.graphics,javafx.web"
+}
