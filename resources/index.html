@@ -10,12 +10,98 @@
 
 <body>
   <nav>
-    <a href="index.html">Home</a>
+    <a href="index.html" class="active">Tasks</a>
     <a href="calendar.html">Calendar</a>
   </nav>
+  
   <main>
-  <h1>ProWork</h1>
-  <p>Welcome to ProWork, dein Ort für dein Professionelles Arbeiten!</p>
+    <div class="header">
+      <h1>Task List</h1>
+      <button id="add-task-btn" class="btn-primary">+ Add Task</button>
+    </div>
+
+    <!-- Add Task Form -->
+    <div id="task-form-container" class="form-container hidden">
+      <h2>Add New Task</h2>
+      <form id="task-form">
+        <div class="form-group">
+          <label for="task-name">Task Name *</label>
+          <input type="text" id="task-name" required placeholder="e.g., Math Homework">
+        </div>
+
+        <div class="form-group">
+          <label for="task-deadline">Deadline *</label>
+          <input type="date" id="task-deadline" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="task-type">Type *</label>
+            <select id="task-type" required>
+              <option value="TEST">Test</option>
+              <option value="HOMEWORK">Homework</option>
+              <option value="MEETING">Meeting</option>
+              <option value="TRAINING">Training</option>
+              <option value="WORK">Work</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="task-priority">Priority *</label>
+            <select id="task-priority" required>
+              <option value="HIGH">High</option>
+              <option value="MEDIUM" selected>Medium</option>
+              <option value="LOW">Low</option>
+              <option value="NOT_USED">Not Used</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="task-repetition">Repetition</label>
+          <select id="task-repetition">
+            <option value="NONE" selected>None</option>
+            <option value="DAILY">Daily</option>
+            <option value="WEEKLY">Weekly</option>
+            <option value="MONTHLY">Monthly</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">Save Task</button>
+          <button type="button" id="cancel-btn" class="btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Task Detail Modal (for TEST type tasks with notes) -->
+    <div id="task-detail-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="detail-task-name">Task Details</h2>
+          <button id="close-detail-btn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="detail-info">
+            <p><strong>Deadline:</strong> <span id="detail-deadline"></span></p>
+            <p><strong>Priority:</strong> <span id="detail-priority"></span></p>
+          </div>
+          <div class="form-group">
+            <label for="detail-notes">Notes</label>
+            <textarea id="detail-notes" rows="10" placeholder="Add your notes here..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="save-notes-btn" class="btn-primary">Save Notes</button>
+          <button id="cancel-detail-btn" class="btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task List -->
+    <div id="task-list">
+      <p>Loading tasks...</p>
+    </div>
   </main>
 </body>
 
