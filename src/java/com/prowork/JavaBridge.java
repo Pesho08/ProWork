@@ -12,9 +12,7 @@ public class JavaBridge {
   public JavaBridge(WebEngine engine) { 
     this.engine = engine;
     this.taskManager = new TaskManager();
-    
-    // Test-Daten zum Testen (später entfernen)
-    addTestData();
+    // Test-Daten entfernt - Tasks können über UI erstellt werden
   }
 
   // Task hinzufügen
@@ -28,6 +26,7 @@ public class JavaBridge {
         RepetitionPattern.valueOf(repetition)
       );
       taskManager.addTask(task);
+      System.out.println("Task added with ID: " + task.getId());
       return task.getId();
     } catch (Exception e) {
       System.err.println("Error adding task: " + e.getMessage());
@@ -38,12 +37,32 @@ public class JavaBridge {
   // All Tasks as JSON-String 
   public String getAllTasks() {
     List<Task> tasks = taskManager.getAllTasks();
+    System.out.println("Getting all tasks. Count: " + tasks.size());
     return tasksToJson(tasks);
   }
 
   // Delete Task
   public boolean deleteTask(String id) {
-    return taskManager.deleteTask(id);
+    System.out.println("=== DELETE TASK CALLED ===");
+    System.out.println("ID to delete: '" + id + "'");
+    System.out.println("ID type: " + (id != null ? id.getClass().getName() : "null"));
+    System.out.println("ID length: " + (id != null ? id.length() : "null"));
+    
+    // Liste alle Tasks vor dem Löschen
+    List<Task> allTasks = taskManager.getAllTasks();
+    System.out.println("Tasks before delete: " + allTasks.size());
+    for (Task task : allTasks) {
+      System.out.println("  - Task ID: '" + task.getId() + "' Name: " + task.getName());
+      System.out.println("    IDs equal? " + task.getId().equals(id));
+    }
+    
+    boolean result = taskManager.deleteTask(id);
+    
+    System.out.println("Delete result: " + result);
+    System.out.println("Tasks after delete: " + taskManager.getAllTasks().size());
+    System.out.println("=========================");
+    
+    return result;
   }
 
   // Task as done mark
@@ -58,7 +77,7 @@ public class JavaBridge {
 
   // Tasks for a specific date
   public String getTasksForDate(String dateStr) {
-   try {
+    try {
       LocalDate date = LocalDate.parse(dateStr);
       List<Task> tasks = taskManager.getTasksForDate(date);
       return tasksToJson(tasks);
@@ -79,7 +98,7 @@ public class JavaBridge {
   }
 
   // Tasks Details as JSON
-   public String getTask(String id) {
+  public String getTask(String id) {
     Task task = taskManager.getTask(id);
     if (task != null) {
       return taskToJson(task);
@@ -88,7 +107,7 @@ public class JavaBridge {
   }
 
   // Hilfsmethode: Tasks to JSON convert
-private String tasksToJson(List<Task> tasks) {
+  private String tasksToJson(List<Task> tasks) {
     StringBuilder json = new StringBuilder("[");
     for (int i = 0; i < tasks.size(); i++) {
       json.append(taskToJson(tasks.get(i)));
@@ -123,32 +142,5 @@ private String tasksToJson(List<Task> tasks) {
               .replace("\"", "\\\"")
               .replace("\n", "\\n")
               .replace("\r", "\\r");
-  }
-
-  // Test Data
-  private void addTestData() {
-    taskManager.addTask(new Task(
-      "Math Test Chapter 5",
-      LocalDate.now().plusDays(3),
-      TaskType.TEST,
-      Priority.HIGH,
-      RepetitionPattern.NONE
-    ));
-    
-    taskManager.addTask(new Task(
-      "English Homework",
-      LocalDate.now().plusDays(1),
-      TaskType.HOMEWORK,
-      Priority.MEDIUM,
-      RepetitionPattern.NONE
-    ));
-    
-    taskManager.addTask(new Task(
-      "Team Meeting",
-      LocalDate.now(),
-      TaskType.MEETING,
-      Priority.HIGH,
-      RepetitionPattern.WEEKLY
-    ));
   }
 }
