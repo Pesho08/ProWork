@@ -7,29 +7,33 @@ import java.util.List;
 
 public class JavaBridge {
   private final WebEngine engine;
-  private final TaskManager taskManager;
+  // STATIC TaskManager - wird zwischen allen JavaBridge-Instanzen geteilt!
+  private static final TaskManager taskManager = new TaskManager();
 
   public JavaBridge(WebEngine engine) { 
     this.engine = engine;
-    this.taskManager = new TaskManager();
-    // Test-Daten entfernt - Tasks können über UI erstellt werden
+    // TaskManager wird NICHT mehr hier erstellt - verwende den static!
   }
 
   // Task hinzufügen
-  public String addTask(String name, String deadline, String type, String priority, String repetition) {
+  public String addTask(String name, String type, String priority, String dueDate, String repetition, String notes) {
     try {
       Task task = new Task(
         name,
-        LocalDate.parse(deadline),
+        LocalDate.parse(dueDate),
         TaskType.valueOf(type),
         Priority.valueOf(priority),
         RepetitionPattern.valueOf(repetition)
       );
+      if (notes != null && !notes.isEmpty()) {
+        task.setNotes(notes);
+      }
       taskManager.addTask(task);
-      System.out.println("Task added with ID: " + task.getId());
+      System.out.println("Task added: " + name + " (ID: " + task.getId() + ")");
       return task.getId();
     } catch (Exception e) {
       System.err.println("Error adding task: " + e.getMessage());
+      e.printStackTrace();
       return null;
     }
   }
@@ -43,25 +47,9 @@ public class JavaBridge {
 
   // Delete Task
   public boolean deleteTask(String id) {
-    System.out.println("=== DELETE TASK CALLED ===");
-    System.out.println("ID to delete: '" + id + "'");
-    System.out.println("ID type: " + (id != null ? id.getClass().getName() : "null"));
-    System.out.println("ID length: " + (id != null ? id.length() : "null"));
-    
-    // Liste alle Tasks vor dem Löschen
-    List<Task> allTasks = taskManager.getAllTasks();
-    System.out.println("Tasks before delete: " + allTasks.size());
-    for (Task task : allTasks) {
-      System.out.println("  - Task ID: '" + task.getId() + "' Name: " + task.getName());
-      System.out.println("    IDs equal? " + task.getId().equals(id));
-    }
-    
+    System.out.println("Deleting task: " + id);
     boolean result = taskManager.deleteTask(id);
-    
     System.out.println("Delete result: " + result);
-    System.out.println("Tasks after delete: " + taskManager.getAllTasks().size());
-    System.out.println("=========================");
-    
     return result;
   }
 
@@ -70,6 +58,7 @@ public class JavaBridge {
     Task task = taskManager.getTask(id);
     if (task != null) {
       task.setCompleted(true);
+      System.out.println("Task completed: " + id);
       return true;
     }
     return false;
@@ -87,23 +76,48 @@ public class JavaBridge {
     }
   }
 
-  // Notes just for Tasks of Type TEST
-  public boolean setTaskNotes(String id, String notes) {
+  // Update notes for a task
+  public boolean updateTaskNotes(String id, String notes) {
+    System.out.println("Updating notes for task: " + id);
     Task task = taskManager.getTask(id);
     if (task != null && task.canHaveNotes()) {
       task.setNotes(notes);
+      System.out.println("Notes updated successfully");
       return true;
     }
+    System.out.println("Could not update notes");
     return false;
   }
 
-  // Tasks Details as JSON
+  // Task Details as JSON
   public String getTask(String id) {
     Task task = taskManager.getTask(id);
     if (task != null) {
       return taskToJson(task);
     }
     return null;
+  }
+
+  // Switch to calendar view
+  public void switchToCalendar() {
+    System.out.println("Switching to calendar view...");
+    try {
+      String calendarPath = getClass().getResource("/calendar.html").toExternalForm();
+      engine.load(calendarPath);
+    } catch (Exception e) {
+      System.err.println("Error switching to calendar: " + e.getMessage());
+    }
+  }
+
+  // Switch to task list view
+  public void switchToTaskList() {
+    System.out.println("Switching to task list view...");
+    try {
+      String indexPath = getClass().getResource("/index.html").toExternalForm();
+      engine.load(indexPath);
+    } catch (Exception e) {
+      System.err.println("Error switching to task list: " + e.getMessage());
+    }
   }
 
   // Hilfsmethode: Tasks to JSON convert
@@ -119,14 +133,14 @@ public class JavaBridge {
     return json.toString();
   }
 
-  // A Tasks to JSON
+  // A Task to JSON - MIT KORREKTEN FELDNAMEN!
   private String taskToJson(Task task) {
     return String.format(
-      "{\"id\":\"%s\",\"name\":\"%s\",\"deadline\":\"%s\",\"type\":\"%s\",\"priority\":\"%s\",\"repetition\":\"%s\",\"notes\":\"%s\",\"completed\":%b,\"color\":\"%s\"}",
+      "{\"id\":\"%s\",\"name\":\"%s\",\"dueDate\":\"%s\",\"taskType\":\"%s\",\"priority\":\"%s\",\"repetition\":\"%s\",\"notes\":\"%s\",\"completed\":%b,\"color\":\"%s\"}",
       task.getId(),
       escapeJson(task.getName()),
       task.getDeadline().toString(),
-      task.getType().name(),
+      task.getType().name(),        // taskType (nicht type!)
       task.getPriority().name(),
       task.getRepetition().name(),
       escapeJson(task.getNotes()),

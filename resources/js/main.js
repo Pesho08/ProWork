@@ -1,44 +1,34 @@
 /**
- * ProWork - Task Management Application with ALERT DEBUGGING
+ * ProWork - Task Management Application
+ * Main JavaScript file
  */
 
 let currentDetailTaskId = null;
 
-window.addEventListener('DOMContentLoaded', () => {
-    alert('Page loaded!');
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('ProWork loaded');
     waitForJavaBridge();
     setupEventListeners();
 });
 
 function setupEventListeners() {
-  const addTaskBtn = document.getElementById('add-task-btn');
-  const cancelBtn = document.getElementById('cancel-btn');
-  const taskForm = document.getElementById('task-form');
-  const closeDetailBtn = document.getElementById('close-detail-btn');
-  const cancelDetailBtn = document.getElementById('cancel-detail-btn');
-  const saveNotesBtn = document.getElementById('save-notes-btn');
-
-  addTaskBtn.addEventListener('click', showTaskForm);
-  cancelBtn.addEventListener('click', hideTaskForm);
-  taskForm.addEventListener('submit', handleTaskSubmit);
-  closeDetailBtn.addEventListener('click', hideTaskDetail);
-  cancelDetailBtn.addEventListener('click', hideTaskDetail);
-  saveNotesBtn.addEventListener('click', handleSaveNotes);
+  document.getElementById('add-task-btn').addEventListener('click', showTaskForm);
+  document.getElementById('cancel-btn').addEventListener('click', hideTaskForm);
+  document.getElementById('task-form').addEventListener('submit', handleTaskSubmit);
+  document.getElementById('close-detail-btn').addEventListener('click', hideTaskDetail);
+  document.getElementById('cancel-detail-btn').addEventListener('click', hideTaskDetail);
+  document.getElementById('save-notes-btn').addEventListener('click', handleSaveNotes);
 }
 
 function attachDeleteButtonListeners() {
   const deleteButtons = document.querySelectorAll('.delete-btn');
-  alert('Found ' + deleteButtons.length + ' delete buttons');
   
-  deleteButtons.forEach((button, index) => {
+  deleteButtons.forEach(function(button) {
     const taskId = button.getAttribute('data-task-id');
     
     button.addEventListener('click', function(e) {
-      alert('DELETE BUTTON CLICKED! Task ID: ' + taskId);
-      
       e.stopPropagation();
       e.preventDefault();
-      
       deleteTask(taskId);
     });
   });
@@ -47,14 +37,13 @@ function attachDeleteButtonListeners() {
 function attachTaskClickListeners() {
   const clickableTasks = document.querySelectorAll('.task-item.clickable');
   
-  clickableTasks.forEach((taskItem, index) => {
+  clickableTasks.forEach(function(taskItem) {
     const taskId = taskItem.getAttribute('data-task-id');
     
     taskItem.addEventListener('click', function(e) {
       if (e.target.classList.contains('delete-btn') || e.target.closest('.delete-btn')) {
         return;
       }
-      
       showTaskDetail(taskId);
     });
   });
@@ -91,32 +80,29 @@ function handleTaskSubmit(e) {
       alert('Error: Could not add task!');
     }
   } catch (error) {
+    console.error('Error adding task:', error);
     alert('Error adding task: ' + error.message);
   }
 }
 
 function deleteTask(taskId) {
-  alert('deleteTask called with ID: ' + taskId);
-  
   if (!taskId) {
-    alert('ERROR: No task ID!');
+    alert('Error: No task ID!');
     return;
   }
   
   if (confirm('Are you sure you want to delete this task?')) {
     try {
-      alert('Calling Java deleteTask...');
       const success = window.javaApp.deleteTask(taskId);
-      alert('Java returned: ' + success);
       
       if (success) {
-        alert('Success! Reloading tasks...');
         loadTasks();
       } else {
-        alert('Delete returned false!');
+        alert('Error: Could not delete task!');
       }
     } catch (error) {
-      alert('ERROR: ' + error.message);
+      console.error('Error deleting task:', error);
+      alert('Error deleting task: ' + error.message);
     }
   }
 }
@@ -135,6 +121,7 @@ function showTaskDetail(taskId) {
     
     document.getElementById('task-detail-modal').classList.remove('hidden');
   } catch (error) {
+    console.error('Error showing task detail:', error);
     alert('Error loading task details: ' + error.message);
   }
 }
@@ -157,13 +144,14 @@ function handleSaveNotes() {
       alert('Error: Could not save notes!');
     }
   } catch (error) {
+    console.error('Error saving notes:', error);
     alert('Error saving notes: ' + error.message);
   }
 }
 
 function waitForJavaBridge() {
   if (typeof window.javaApp !== 'undefined') {
-    alert('JavaBridge ready!');
+    console.log('JavaBridge ready');
     loadTasks();
   } else {
     setTimeout(waitForJavaBridge, 100);
@@ -176,7 +164,8 @@ function loadTasks() {
     const tasks = JSON.parse(tasksJson);
     displayTasks(tasks);
   } catch (error) {
-    alert('Error loading tasks: ' + error.message);
+    console.error('Error loading tasks:', error);
+    document.getElementById('task-list').innerHTML = '<p style="color:red;">Error loading tasks</p>';
   }
 }
 
@@ -190,7 +179,7 @@ function displayTasks(tasks) {
 
   let html = '<div class="tasks">';
 
-  tasks.forEach(task => {
+  tasks.forEach(function(task) {
     const isClickable = task.type === 'TEST';
     const clickableClass = isClickable ? 'clickable' : '';
     
@@ -221,7 +210,6 @@ function displayTasks(tasks) {
   html += '</div>';
   taskList.innerHTML = html;
   
-  // ATTACH LISTENERS AFTER RENDERING
   attachDeleteButtonListeners();
   attachTaskClickListeners();
 }
