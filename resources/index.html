@@ -305,6 +305,11 @@
         .empty-state p {
             font-size: 14px;
         }
+
+        .empty-notes {
+            color: #adb5bd;
+            font-style: italic;
+        }
     </style>
 </head>
 
@@ -383,12 +388,31 @@
     </div>
 
     <script>
-        // Load tasks on page load and set today's date
-        window.addEventListener('load', function () {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('taskDueDate').value = today;
-            loadTasks();
-        });
+        // Wait for javaBridge before loading tasks
+        function waitForJavaBridge() {
+            let attempts = 0;
+            const maxAttempts = 50;
+
+            const checkBridge = setInterval(function () {
+                attempts++;
+
+                if (typeof javaBridge !== 'undefined') {
+                    clearInterval(checkBridge);
+                    console.log('javaBridge found in index.html!');
+                    // Set today's date
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('taskDueDate').value = today;
+                    // Load tasks
+                    loadTasks();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkBridge);
+                    alert('Fehler: JavaBridge konnte nicht geladen werden.');
+                }
+            }, 100);
+        }
+
+        // Initialize on load - wait for javaBridge first!
+        window.addEventListener('load', waitForJavaBridge);
 
         // Form submission
         document.getElementById('taskForm').addEventListener('submit', function (e) {
@@ -487,19 +511,21 @@
                 metaHtml += '</div>';
 
                 let notesHtml = '';
-                if (task.notes) {
-                    if (task.taskType === 'TEST') {
-                        notesHtml = `<div class="task-notes task-notes-editable" onclick="editNotes(${task.id}, this)">${task.notes}</div>`;
-                    } else {
-                        notesHtml = `<div class="task-notes">${task.notes}</div>`;
-                    }
+                // Show notes field for TEST tasks (even if empty) OR if notes exist
+                if (task.taskType === 'TEST') {
+                    const notesText = task.notes || 'Klicke hier um Notizen hinzuzufügen...';
+                    const notesClass = task.notes ? 'task-notes task-notes-editable' : 'task-notes task-notes-editable empty-notes';
+                    notesHtml = `<div class="${notesClass}" onclick="editNotes('${task.id}', this)">${notesText}</div>`;
+                } else if (task.notes) {
+                    // Other task types only show notes if they exist
+                    notesHtml = `<div class="task-notes">${task.notes}</div>`;
                 }
 
                 taskItem.innerHTML = `
                     <div class="task-header">
                         <div class="task-title">${task.name}</div>
                         <div class="task-actions">
-                            <button class="btn-delete" onclick="deleteTask(${task.id})">Löschen</button>
+                            <button class="btn-delete" onclick="deleteTask('${task.id}')">Löschen</button>
                         </div>
                     </div>
                     ${metaHtml}
@@ -524,10 +550,28 @@
 
         // Edit notes (for TEST tasks)
         function editNotes(taskId, element) {
-            const currentNotes = element.textContent;
+            const currentNotes = element.textContent.trim();
+
+            // Show current notes first
+            const action = confirm('Aktuelle Notizen:\n\n' + currentNotes + '\n\n' +
+                'Möchtest du die Notizen bearbeiten?\n' +
+                'OK = Bearbeiten | Abbrechen = Nur anzeigen');
+
+            if (!action) {
+                return; // User wants to just view, don't edit
+            }
+
             const newNotes = prompt('Notizen bearbeiten:', currentNotes);
 
-            if (newNotes !== null && newNotes !== currentNotes) {
+            // Only update if user didn't cancel AND text actually changed
+            if (newNotes !== null && newNotes.trim() !== currentNotes) {
+                // Confirm if user is deleting all notes
+                if (newNotes.trim() === '') {
+                    if (!confirm('Möchtest du die Notizen wirklich komplett löschen?')) {
+                        return; // User changed their mind
+                    }
+                }
+
                 try {
                     javaBridge.updateTaskNotes(taskId, newNotes);
                     loadTasks(); // Reload to show updated notes
