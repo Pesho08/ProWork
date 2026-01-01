@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProWork - Kalender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .calendar-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .weekday {
+            padding: 15px;
+            text-align: center;
+            font-weight: 600;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            grid-auto-rows: minmax(100px, auto);
+        }
+
+        .calendar-day {
+            border: 1px solid #e9ecef;
+            padding: 8px;
+            min-height: 100px;
+            position: relative;
+            background: white;
+            transition: background 0.2s;
+        }
+
+        .calendar-day:hover {
+            background: #f8f9fa;
+        }
+
+        .calendar-day.other-month {
+            background: #f8f9fa;
+            color: #adb5bd;
+        }
+
+        .calendar-day.today {
+            background: #e7f5ff;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+
+        .calendar-day.other-month .day-number {
+            color: #adb5bd;
+        }
+
+        .calendar-day.today .day-number {
+            background: #228be6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .task-list {
+            margin-top: 5px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .task-item {
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            border-left: 3px solid;
+            background: rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .task-item:hover {
+            transform: translateX(2px);
+            background: rgba(0, 0, 0, 0.06);
+        }
+
+        /* Task type colors - matching your existing colors */
+        .task-item[data-type="TEST"] {
+            border-left-color: #ff6b6b;
+            background: #ffe3e3;
+            color: #c92a2a;
+        }
+
+        .task-item[data-type="HOMEWORK"] {
+            border-left-color: #4c6ef5;
+            background: #e7f5ff;
+            color: #1864ab;
+        }
+
+        .task-item[data-type="MEETING"] {
+            border-left-color: #51cf66;
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+
+        .task-item[data-type="TRAINING"] {
+            border-left-color: #ffa94d;
+            background: #fff4e6;
+            color: #e67700;
+        }
+
+        .task-item[data-type="WORK"] {
+            border-left-color: #845ef7;
+            background: #f3e5ff;
+            color: #5f3dc4;
+        }
+
+        .priority-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+
+        .priority-HIGH {
+            background: #fa5252;
+        }
+
+        .priority-MEDIUM {
+            background: #fd7e14;
+        }
+
+        .priority-LOW {
+            background: #74c0fc;
+        }
+
+        .more-tasks {
+            font-size: 10px;
+            color: #868e96;
+            margin-top: 3px;
+            font-style: italic;
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #4c6ef5;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4263eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <h1 id="monthYear">Januar 2025</h1>
+            <div class="calendar-nav">
+                <button class="nav-btn" onclick="previousMonth()">← Vorheriger</button>
+                <button class="nav-btn" onclick="today()">Heute</button>
+                <button class="nav-btn" onclick="nextMonth()">Nächster →</button>
+            </div>
+        </div>
+
+        <div class="weekdays">
+            <div class="weekday">Mo</div>
+            <div class="weekday">Di</div>
+            <div class="weekday">Mi</div>
+            <div class="weekday">Do</div>
+            <div class="weekday">Fr</div>
+            <div class="weekday">Sa</div>
+            <div class="weekday">So</div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid">
+            <!-- Calendar days will be generated here -->
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="goToTaskList()">Zur Aufgabenliste</button>
+            <button class="btn btn-secondary" onclick="refreshCalendar()">Aktualisieren</button>
+        </div>
+    </div>
+
+    <script>
+        let currentDate = new Date();
+        let allTasks = [];
+
+        // Initialize calendar
+        function init() {
+            loadTasks();
+        }
+
+        // Load tasks from Java backend
+        function loadTasks() {
+            try {
+                let tasksJson = javaBridge.getAllTasks();
+                allTasks = JSON.parse(tasksJson);
+                renderCalendar();
+            } catch (e) {
+                alert('Fehler beim Laden der Tasks: ' + e.message);
+            }
+        }
+
+        // Render the calendar
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Update header
+            const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+                'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+            document.getElementById('monthYear').textContent = monthNames[month] + ' ' + year;
+
+            // Get first day of month and number of days
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+
+            // Get first day of week (0 = Sunday, 1 = Monday, etc.)
+            let firstDayOfWeek = firstDay.getDay();
+            // Convert to Monday = 0
+            firstDayOfWeek = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
+
+            // Get previous month's last day
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+            // Clear grid
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            // Get today's date for comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let dayCounter = 1;
+            let nextMonthCounter = 1;
+
+            // Create 6 weeks (42 days total)
+            for (let i = 0; i < 42; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+
+                let dayNumber;
+                let currentDayDate;
+                let isCurrentMonth = false;
+
+                // Previous month days
+                if (i < firstDayOfWeek) {
+                    dayNumber = prevMonthLastDay - firstDayOfWeek + i + 1;
+                    dayDiv.classList.add('other-month');
+                    currentDayDate = new Date(year, month - 1, dayNumber);
+                }
+                // Current month days
+                else if (dayCounter <= daysInMonth) {
+                    dayNumber = dayCounter;
+                    currentDayDate = new Date(year, month, dayNumber);
+                    isCurrentMonth = true;
+                    dayCounter++;
+
+                    // Check if today
+                    if (currentDayDate.getTime() === today.getTime()) {
+                        dayDiv.classList.add('today');
+                    }
+                }
+                // Next month days
+                else {
+                    dayNumber = nextMonthCounter;
+                    dayDiv.classList.add('other-month');
+                    currentDayDate = new Date(year, month + 1, dayNumber);
+                    nextMonthCounter++;
+                }
+
+                // Create day number
+                const dayNumberDiv = document.createElement('div');
+                dayNumberDiv.className = 'day-number';
+                dayNumberDiv.textContent = dayNumber;
+                dayDiv.appendChild(dayNumberDiv);
+
+                // Add tasks for this day (only for current month)
+                if (isCurrentMonth) {
+                    const tasksForDay = getTasksForDate(currentDayDate);
+                    if (tasksForDay.length > 0) {
+                        const taskList = document.createElement('div');
+                        taskList.className = 'task-list';
+
+                        // Show max 3 tasks
+                        const maxTasks = 3;
+                        const tasksToShow = tasksForDay.slice(0, maxTasks);
+
+                        tasksToShow.forEach(task => {
+                            const taskItem = document.createElement('div');
+                            taskItem.className = 'task-item';
+                            taskItem.setAttribute('data-type', task.taskType);
+
+                            // Add priority indicator
+                            const priorityIndicator = document.createElement('span');
+                            priorityIndicator.className = 'priority-indicator priority-' + task.priority;
+                            taskItem.appendChild(priorityIndicator);
+
+                            // Add task name
+                            const taskName = document.createTextNode(task.name);
+                            taskItem.appendChild(taskName);
+
+                            // Click handler for task details
+                            taskItem.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                showTaskDetails(task);
+                            });
+
+                            taskList.appendChild(taskItem);
+                        });
+
+                        // Show "more tasks" indicator
+                        if (tasksForDay.length > maxTasks) {
+                            const moreDiv = document.createElement('div');
+                            moreDiv.className = 'more-tasks';
+                            moreDiv.textContent = '+' + (tasksForDay.length - maxTasks) + ' weitere';
+                            taskList.appendChild(moreDiv);
+                        }
+
+                        dayDiv.appendChild(taskList);
+                    }
+                }
+
+                grid.appendChild(dayDiv);
+            }
+        }
+
+        // Get tasks for a specific date
+        function getTasksForDate(date) {
+            return allTasks.filter(task => {
+                if (!task.dueDate) return false;
+                const parts = task.dueDate.split('-');
+                const taskDate = new Date(parts[0], parts[1] - 1, parts[2]);
+                taskDate.setHours(0, 0, 0, 0);
+
+                return taskDate.getTime() === date.getTime();
+            }).sort((a, b) => {
+                // Sort by priority (HIGH first)
+                const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+                return priorityOrder[a.priority] - priorityOrder[b.priority];
+            });
+        }
+
+        // Show task details
+        function showTaskDetails(task) {
+            let details = 'Task: ' + task.name + '\n\n';
+            details += 'Typ: ' + task.taskType + '\n';
+            details += 'Priorität: ' + task.priority + '\n';
+            details += 'Fällig am: ' + task.dueDate + '\n';
+            if (task.repetition !== 'NONE') {
+                details += 'Wiederholung: ' + task.repetition + '\n';
+            }
+            if (task.notes) {
+                details += '\nNotizen:\n' + task.notes;
+            }
+            alert(details);
+        }
+
+        // Navigation functions
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function today() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        function refreshCalendar() {
+            loadTasks();
+        }
+
+        function goToTaskList() {
+            if (typeof javaBridge !== 'undefined') {
+                javaBridge.switchToTaskList();
+            }
+        }
+
+        // Wait for javaBridge to be injected before initializing
+        function waitForJavaBridge() {
+            let attempts = 0;
+            const maxAttempts = 50;
+
+            const checkBridge = setInterval(function () {
+                attempts++;
+
+                if (typeof javaBridge !== 'undefined') {
+                    clearInterval(checkBridge);
+                    console.log('javaBridge found, initializing...');
+                    init();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(checkBridge);
+                    alert('Fehler: JavaBridge konnte nicht geladen werden.');
+                }
+            }, 100);
+        }
+
+        // Initialize on load - wait for javaBridge first!
+        window.addEventListener('load', waitForJavaBridge);
+    </script>
+</body>
+
+</html>
